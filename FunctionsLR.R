@@ -1,3 +1,13 @@
+# Write function to calculate p_k(x;b)
+calc_pk <- function(x, b,k){
+  bk <- beta[,k]
+  exp(sum(x*bk))/sum(apply(b, 2, \(y) exp(sum(x*y))))
+}
+f <- function(X, y, beta, lambda, pk, n){
+  y_use <- cbind(y, 1:n)
+  -sum(apply(y_use, 1, \(x) log(pk[x[1], x[2]]))) + lambda/2*sum(beta^2)
+}
+
 # Function that implements multi-class logistic regression.
 #############################################################
 # Description of supplied parameters:
@@ -20,21 +30,55 @@ LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta
   ## Check the supplied parameters as described. You can assume that X, Xt are matrices; y, yt are vectors; and numIter, eta, lambda are scalars. You can assume that beta_init is either NULL (default) or a matrix.
   ###################################
   # Check that the first column of X and Xt are 1s, if not - display appropriate message and stop execution.
-  
+  if(unique(X[ ,1]) != 1){
+    stop(paste("First column of X is not 1s"))
+  }
+  if(unique(Xt[ ,1]) != 1){
+    stop(paste("First column of Xt is not 1s"))
+  }
   # Check for compatibility of dimensions between X and Y
-  
+  n <- length(y)
+  if(nrow(X) != n){
+    stop(paste("Number of observations in y aren't compatible with number of observations in X"))
+  }
   # Check for compatibility of dimensions between Xt and Yt
-  
+  nt <- length(yt)
+  if(nrow(X) != n){
+    stop(paste("Number of observations in yt aren't compatible with number of observations in Xt"))
+  }
   # Check for compatibility of dimensions between X and Xt
-  
+  p <- ncol(X)
+  if(p != ncol(Xt)){
+    stop(paste("Number of columns in X don't match Xt"))
+  }
   # Check eta is positive
-  
+  if(eta <= 0){
+    stop(paste("Eta isn't positive"))
+  }
   # Check lambda is non-negative
+  if(lambda < 0){
+    stop(paste("Lambda is negative"))
+  }
   
   # Check whether beta_init is NULL. If NULL, initialize beta with p x K matrix of zeroes. If not NULL, check for compatibility of dimensions with what has been already supplied.
+  K <- length(unique(y))
+  if(is.null(beta_init)){
+    beta_init <- matrix(0, nrow = p, ncol = K)
+  } else{
+    if(p != nrow(beta_init)){
+      stop(paste("wrong number of rows in beta_init. Should be ",p, " has ", nrow(beta_init)))
+    }
+    if(K != ncol(beta_init)){
+      stop(paste("wrong number of columns in beta_init. Should be ",K, " has ", ncol(beta_init)))
+    }
+  }
+  
   
   ## Calculate corresponding pk, objective value f(beta_init), training error and testing error given the starting point beta_init
   ##########################################################################
+  pk <- sapply(1:K, calc_pk)
+  objective <- c(f(X, y, beta_init, lambda, pk, n), rep(0, numIter))
+  
   
   ## Newton's method cycle - implement the update EXACTLY numIter iterations
   ##########################################################################
