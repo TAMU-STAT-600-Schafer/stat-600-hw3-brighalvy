@@ -1,21 +1,17 @@
 # Write function to calculate p_k(x;b)
-calc_pk <- function(x, b,K){
-  pk <- c()
-  for(k in 1:K){
-    bk <- beta[,k]
-    pk[k] <- exp(sum(x*bk))/sum(apply(b, 2, \(y) exp(sum(x*y))))
-  }
-  pk
+calc_pk <- function(X, b){
+  exp_XB <- exp(X%*%b)
+  pk <- exp_XB/rowSums(exp_XB)
 }
 # Objective Function:
 f <- function(X, y, beta, lambda, pk, n){
-  y_use <- cbind(y, 1:n)
-  -sum(apply(y_use, 1, \(x) log(pk[x[1], x[2]]))) + lambda/2*sum(beta^2)
+  y_use <- cbind(y + 1, 1:n)
+  -sum(apply(y_use, 1, \(x) log(pk[x[2], x[1]]))) + lambda/2*sum(beta^2)
 }
 # Error Function:
 error <- function(y, pk){
   preds <- apply(pk, 1, which.max) - 1
-  mean(y != pk)*100
+  mean(y != preds)*100
 }
 
 # Function that implements multi-class logistic regression.
@@ -53,7 +49,7 @@ LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta
   }
   # Check for compatibility of dimensions between Xt and Yt
   nt <- length(yt)
-  if(nrow(X) != n){
+  if(nrow(Xt) != nt){
     stop(paste("Number of observations in yt aren't compatible with number of observations in Xt"))
   }
   # Check for compatibility of dimensions between X and Xt
@@ -86,29 +82,29 @@ LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta
   
   ## Calculate corresponding pk, objective value f(beta_init), training error and testing error given the starting point beta_init
   ##########################################################################
-  pk <- apply(X, 1, \(x) calc_pk(x, beta_init, K))
+  pk <- calc_pk(X, beta_init)
   objective <- c(f(X, y, beta_init, lambda, pk, n), rep(0, numIter))
   error_train <- c(error(y, pk), rep(0, numIter))
-  pkt <- apply(Xt, 1, \(x) calc_pk(x, beta_init, K))
+  pkt <- calc_pk(Xt, beta_init)
   error_test <- c(error(yt, pkt), rep(0, numIter))
   
   ## Newton's method cycle - implement the update EXACTLY numIter iterations
   ##########################################################################
   beta <-  beta_init
-  for(i in 2:numIter){
+  for(i in 2:(numIter + 1)){
     # Update Beta:
     for(k in 1:K){
-      gradient <- t(X)%*%(pk[,k] - as.numeric(y = k)) + lambda*beta[,k]
+      gradient <- t(X)%*%(pk[,k] - as.numeric(y == k - 1)) + lambda*beta[,k]
       w <- pk[,k]*(1 - pk[,k])
       hessian <- crossprod(X, w*X) + diag(lambda, nrow = p)
       beta[,k] <- beta[,k] - eta*solve(hessian)%*%gradient
+      pk <- calc_pk(X, beta)
     }
     # Within one iteration: perform the update, calculate updated objective function and training/testing errors in %
-    pk <- apply(X, 1, \(x) calc_pk(x, beta, K))
     objective[i] <- f(X, y, beta, lambda, pk, n)
     error_train[i] <- error(y, pk)
-    pkt <- apply(Xt, 1, \(x) calc_pk(x, beta, K))
-    error_tes[i] <- error(yt, pkt)
+    pkt <-calc_pk(Xt, beta)
+    error_test[i] <- error(yt, pkt)
   }
   ## Return output
   ##########################################################################
