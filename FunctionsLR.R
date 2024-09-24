@@ -94,9 +94,9 @@ LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta
   for(i in 2:(numIter + 1)){
     # Update Beta:
     for(k in 1:K){
-      gradient <- t(X)%*%(pk[,k] - as.numeric(y == k - 1)) + lambda*beta[,k]
+      gradient <- t(X)%*%(pk[,k] - as.numeric(y == (k - 1))) + lambda*beta[,k]
       w <- pk[,k]*(1 - pk[,k])
-      hessian <- crossprod(X, w*X) + diag(lambda, nrow = p)
+      hessian <- t(X)%*%(w*X) + diag(lambda, nrow = p)
       beta[,k] <- beta[,k] - eta*solve(hessian)%*%gradient
     }
     # Within one iteration: perform the update, calculate updated objective function and training/testing errors in %

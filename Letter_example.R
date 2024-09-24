@@ -33,4 +33,4 @@ microbenchmark::microbenchmark(LRMultiClass(X, Y, Xt, Yt), times = 5)
 
 # [ToDo] Report the median time of your code from microbenchmark above in the comments below
 
-# Median time:  3.141438 (in sec)
+# Median time:  1.858722 (in sec)
