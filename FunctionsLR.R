@@ -98,9 +98,9 @@ LRMultiClass <- function(X, y, Xt, yt, numIter = 50, eta = 0.1, lambda = 1, beta
       w <- pk[,k]*(1 - pk[,k])
       hessian <- crossprod(X, w*X) + diag(lambda, nrow = p)
       beta[,k] <- beta[,k] - eta*solve(hessian)%*%gradient
-      pk <- calc_pk(X, beta)
     }
     # Within one iteration: perform the update, calculate updated objective function and training/testing errors in %
+    pk <- calc_pk(X, beta)
     objective[i] <- f(X, y, beta, lambda, pk, n)
     error_train[i] <- error(y, pk)
     pkt <-calc_pk(Xt, beta)
