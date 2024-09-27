@@ -3,12 +3,16 @@
 # Load the letter data
 #########################
 # Training data
-letter_train <- read.table("Data/letter-train.txt", header = F, colClasses = "numeric")
+letter_train <- read.table("Data/letter-train.txt",
+                           header = F,
+                           colClasses = "numeric")
 Y <- letter_train[, 1]
 X <- as.matrix(letter_train[, -1])
 
 # Testing data
-letter_test <- read.table("Data/letter-test.txt", header = F, colClasses = "numeric")
+letter_test <- read.table("Data/letter-test.txt",
+                          header = F,
+                          colClasses = "numeric")
 Yt <- letter_test[, 1]
 Xt <- as.matrix(letter_test[, -1])
 
@@ -33,4 +37,4 @@ microbenchmark::microbenchmark(LRMultiClass(X, Y, Xt, Yt), times = 5)
 
 # [ToDo] Report the median time of your code from microbenchmark above in the comments below
 
-# Median time:  1.858722 (in sec)
+# Median time:  1.806729 (in sec)
